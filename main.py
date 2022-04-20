@@ -11,17 +11,24 @@ def main():
     print("There are {0} possible words".format(len(dictionary)))
     print("Here are the 20 most common words with 5 unique letters and at least 3 vowels:")
     word = first_word
-    top_n = 0
-    while word != '' and top_n < 20:
-        if len(dictionary[word]) == 7:  # 5 unique letters plus "prev" and "next"
-            vowels = 0
-            for letter in word:
-                if letter in {'a', 'e', 'i', 'o', 'u'}:
-                    vowels += 1
-            if vowels >= 3:
-                print(word)
-                top_n += 1
-        word = dictionary[word]["next"]
+    show_more = True
+    while show_more:
+        top_n = 0
+        while word != '' and top_n < 20:
+            if len(dictionary[word]) == 7:  # 5 unique letters plus "prev" and "next"
+                vowels = 0
+                for letter in word:
+                    if letter in {'a', 'e', 'i', 'o', 'u'}:
+                        vowels += 1
+                if vowels >= 3:
+                    print(word)
+                    top_n += 1
+            word = dictionary[word]["next"]
+        choice = input("Would you like to see more? (y/n) ").lower()
+        if choice == 'y':
+            print("Ok, here's the next 20:")
+            continue
+        show_more = False
     known_positions = {}  # green clues
     known_non_positions = {}  # yellow clues
     absent_letters = set()  # grey clues (where the character isn't already in the green or yellow clues)
@@ -199,7 +206,7 @@ def main():
                 top_word = dictionary[top_word]["next"]
                 top_n += 1
             if top_n < len(dictionary):
-                choice = input("Would you like to see more? (y/n)").lower()
+                choice = input("Would you like to see more? (y/n) ").lower()
                 if choice == 'y':
                     top = min(top_n+20, len(dictionary))
                     print("Ok, here's the next {0}:".format(top-top_n))
