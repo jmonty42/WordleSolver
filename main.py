@@ -32,22 +32,28 @@ def main():
     known_positions = {}  # green clues
     known_non_positions = {}  # yellow clues
     absent_letters = set()  # grey clues (where the character isn't already in the green or yellow clues)
-    absolute_counts = {}  # rare: when multiple of a character was guessed
+    absolute_counts = {}  # rare: when multiple of a character was guessed, but some were grey
+    min_counts = {} # if a letter shows up more than once across green and yellow clues
     guess = 1
     while True:
         # collect the green clues
         try_again = True
         greens = 0
+        good_letters_this_turn = {} # track how many green and yellow clues appear for each letter
         while try_again:
             print("{0} guess:".format(ordinal(guess)))
-            greens = int(input("How many letters were green? ").strip())
-            if greens < 0 or greens > 5:
+            try:
+                greens = int(input("How many letters were green? ").strip())
+            except ValueError:
                 print("Invalid input, try again.")
-            elif greens == 5:
-                print("Good job, you solved it!")
-                exit()
             else:
-                try_again = False
+                if greens < 0 or greens > 5:
+                    print("Invalid input, try again.")
+                elif greens == 5:
+                    print("Good job, you solved it!")
+                    exit()
+                else:
+                    try_again = False
         for nth_green in range(greens):
             try_again = True
             green_letter = ''
@@ -57,14 +63,21 @@ def main():
                     print("Invalid input, try again.")
                 else:
                     try_again = False
+            if green_letter not in good_letters_this_turn:
+                good_letters_this_turn[green_letter] = 0
+            good_letters_this_turn[green_letter] = good_letters_this_turn[green_letter] + 1
             try_again = True
             position = 0
             while try_again:
-                position = int(input("What 0-based position was {0} at? ".format(green_letter)).strip())
-                if position < 0 or position >= 5:
+                try:
+                    position = int(input("What 0-based position was {0} at? ".format(green_letter)).strip())
+                except ValueError:
                     print("Invalid input, try again.")
                 else:
-                    try_again = False
+                    if position < 0 or position >= 5:
+                        print("Invalid input, try again.")
+                    else:
+                        try_again = False
             if green_letter not in known_positions:
                 known_positions[green_letter] = {position}
             else:
@@ -73,13 +86,16 @@ def main():
         # collect the yellow clues
         try_again = True
         yellows = 0
-        yellow_letters_this_turn = {}  # frequency of each yellow letter
         while try_again:
-            yellows = int(input("How many letters were yellow? ").strip())
-            if yellows < 0 or yellows >= 5:
+            try:
+                yellows = int(input("How many letters were yellow? ").strip())
+            except ValueError:
                 print("Invalid input, try again.")
             else:
-                try_again = False
+                if yellows < 0 or yellows >= 5:
+                    print("Invalid input, try again.")
+                else:
+                    try_again = False
         for nth_yellow in range(yellows):
             try_again = True
             yellow_letter = ''
@@ -89,22 +105,33 @@ def main():
                     print("Invalid input, try again.")
                 else:
                     try_again = False
-            if yellow_letter not in yellow_letters_this_turn:
-                yellow_letters_this_turn[yellow_letter] = 0
-            yellow_letters_this_turn[yellow_letter] = yellow_letters_this_turn[yellow_letter] + 1
+            if yellow_letter not in good_letters_this_turn:
+                good_letters_this_turn[yellow_letter] = 0
+            good_letters_this_turn[yellow_letter] = good_letters_this_turn[yellow_letter] + 1
             try_again = True
             position = 0
             while try_again:
-                position = int(input("What 0-based position was {0} at? ".format(yellow_letter)).strip())
-                if position < 0 or position >= 5:
+                try:
+                    position = int(input("What 0-based position was {0} at? ".format(yellow_letter)).strip())
+                except ValueError:
                     print("Invalid input, try again.")
                 else:
-                    try_again = False
+                    if position < 0 or position >= 5:
+                        print("Invalid input, try again.")
+                    else:
+                        try_again = False
             if yellow_letter not in known_non_positions:
                 known_non_positions[yellow_letter] = {position}
             else:
                 known_non_positions[yellow_letter].add(position)
         print("yellow clues: " + str(known_non_positions))
+        # check the minimum counts for each letter
+        for letter in good_letters_this_turn:
+            if letter not in min_counts:
+                min_counts[letter] = good_letters_this_turn[letter]
+            else:
+                min_counts[letter] = max(min_counts[letter], good_letters_this_turn[letter])
+        print("min counts: " + str(min_counts))
         # collect the grey clues
         try_again = True
         greys = 0
@@ -129,10 +156,8 @@ def main():
                 # getting a grey letter when that same letter has already been green or yellow means that we now know
                 # exactly how many times that particular letter appears in the answer
                 count = 0
-                if grey_letter in known_positions:
-                    count += len(known_positions[grey_letter])
-                if grey_letter in yellow_letters_this_turn:
-                    count += yellow_letters_this_turn[grey_letter]
+                if grey_letter in good_letters_this_turn:
+                    count += good_letters_this_turn[grey_letter]
                 absolute_counts[grey_letter] = count
         print("grey clues: " + str(absent_letters))
         print("known counts of letters: " + str(absolute_counts))
@@ -163,6 +188,14 @@ def main():
                         eligible = False
                         break
                     elif absolute_counts[letter] != len(dictionary[word][letter]):
+                        eligible = False
+                        break
+            if eligible:
+                for letter in min_counts:
+                    if letter not in dictionary[word]:
+                        eligible = False
+                        break
+                    elif min_counts[letter] > len(dictionary[word][letter]):
                         eligible = False
                         break
             # filter known non positions
