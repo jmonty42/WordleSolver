@@ -92,7 +92,7 @@ def main():
             except ValueError:
                 print("Invalid input, try again.")
             else:
-                if yellows < 0 or yellows >= 5:
+                if yellows < 0 or yellows > 5:
                     print("Invalid input, try again.")
                 else:
                     try_again = False
