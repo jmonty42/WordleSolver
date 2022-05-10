@@ -136,11 +136,15 @@ def main():
         try_again = True
         greys = 0
         while try_again:
-            greys = int(input("How many letters were grey? "))
-            if greys < 0 or greys > 5:
+            try:
+                greys = int(input("How many letters were grey? "))
+            except ValueError:
                 print("Invalid input, try again.")
             else:
-                try_again = False
+                if greys < 0 or greys > 5:
+                    print("Invalid input, try again.")
+                else:
+                    try_again = False
         for nth_grey in range(greys):
             try_again = True
             grey_letter = ''
